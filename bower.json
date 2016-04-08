@@ -1,0 +1,10 @@
+{
+    "name": "ullo-client",
+    "description": "A starter project for Gulp AngularJS & Angular2",
+    "version": "0.0.1",
+    "homepage": "",
+    "license": "MIT",
+    "private": true,
+    "dependencies": {
+    }
+}

@@ -1,0 +1,67 @@
+{
+    "name": "ullo-client",    
+    "paths": {
+        "node": "./node_modules",
+        "bower": "./bower_components",
+        "src": "./src",
+        "root": "./wwwroot"
+    },
+    "folders": {
+        "css": "/css",
+        "js": "/js"
+    },
+    "bundles": {        
+        "css": [{
+            "src": [
+                "./wwwroot/css/bootstrap-4/bootstrap.css",
+                "./node_modules/animate.css/animate.css"
+            ],
+            "dist": "./wwwroot/css/vendors.css"
+        }],
+        "js": [{
+            "src": [
+                "./node_modules/dynamics.js/lib/dynamics.js",
+                "./node_modules/angular/angular.js",
+                "./node_modules/angular-route/angular-route.js",
+                "./node_modules/angular-messages/angular-messages.js",
+                "./node_modules/angular-animate/angular-animate.js",
+                "./node_modules/angular-relative-date/dist/angular-relative-date.js",
+                "./node_modules/ng-file-upload/dist/ng-file-upload.js"
+            ],
+            "folder": "./wwwroot/js/vendors",
+            "dist": "./wwwroot/js/vendors.js"
+        }, {
+            "src": [
+                "./src/js/utils/utils.js",
+                "./src/js/app.js",
+                "./src/js/animations/animations.js",
+                "./src/js/directives/directives.js",
+                "./src/js/models/models.js",
+                "./src/js/services/services.js",
+                "./src/js/controllers/controllers.js"
+            ],
+            "folder": "./wwwroot/js/app",
+            "dist": "./wwwroot/js/app.js"
+        }, {
+            "src": [
+                "./src/js/workers/http.js",
+                "./src/js/workers/loader.js"
+            ],
+            "folder": "./wwwroot/js/workers"
+        }] 
+    },
+    "browserlist": [
+        "Chrome >= 30",
+        "Firefox >= 30",
+        "Explorer >= 9",
+        "Opera >= 20",
+        "Safari >= 6",
+        "iOS >= 5",
+        "Edge >= 12",
+        "ExplorerMobile >= 10"
+    ],
+    "server": {
+        "name": "dev.ullowebapp",
+        "port": 8081
+    } 
+}
