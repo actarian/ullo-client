@@ -1,24 +1,24 @@
 
-app.animation('.navigation', ['$rootScope', '$animate', function($rootScope, $animate) {       
+app.animation('.navigation', ['$rootScope', '$animate', function($rootScope, $animate) {
     var previousRoute = null;
-    var currentRoute = null;    
+    var currentRoute = null;
     var bezierOptions = {
         type: dynamics.bezier,
         points: [{x:0,y:0,cp:[{x:0.509,y:0.007}]},{x:1,y:1,cp:[{x:0.566,y:0.997}]}],
-        duration : 500,        
-    }    
+        duration : 500,
+    }
     $rootScope.$on('$routeChangeSuccess', function(event, current, previous) {
         previousRoute = previous.$$route;
         currentRoute = current.$$route;
-    });   
+    });
     function isFirstView() {
         return !currentRoute;
-    }    
+    }
     function isBackward() {
-        return previousRoute.isForward;
-    }    
+        return previousRoute && previousRoute.isForward;
+    }
     return {
-        enter: function(element, done) {                        
+        enter: function(element, done) {
             if (isFirstView()) {
                 // FIRST ENTERING ANIMATION
                 dynamics.css(element[0], {
@@ -30,7 +30,7 @@ app.animation('.navigation', ['$rootScope', '$animate', function($rootScope, $an
                     translateY: 0,
                     opacity: 1,
                     scale: 1,
-                }, bezierOptions);            
+                }, bezierOptions);
             } else if (isBackward()) {
                 // BACKWARD ENTERING ANIMATION
                 var w = element[0].offsetWidth;
@@ -39,7 +39,7 @@ app.animation('.navigation', ['$rootScope', '$animate', function($rootScope, $an
                 });
                 dynamics.animate(element[0], {
                     translateX: 0
-                }, bezierOptions); 
+                }, bezierOptions);
             } else {
                 // FORWARD ENTERING ANIMATION
                 var w = element[0].offsetWidth;
@@ -48,10 +48,10 @@ app.animation('.navigation', ['$rootScope', '$animate', function($rootScope, $an
                 });
                 dynamics.animate(element[0], {
                     translateX: 0
-                }, bezierOptions); 
+                }, bezierOptions);
             }
             done();
-        },    
+        },
         leave: function(element, done) {
             if (isBackward()) {
                 // BACKWARD EXITING ANIMATION
@@ -61,7 +61,7 @@ app.animation('.navigation', ['$rootScope', '$animate', function($rootScope, $an
                 });
                 dynamics.animate(element[0], {
                     translateX: w
-                }, bezierOptions); 
+                }, bezierOptions);
             } else {
                 // FORWARD EXITING ANIMATION
                 var w = element[0].offsetWidth;
@@ -70,7 +70,7 @@ app.animation('.navigation', ['$rootScope', '$animate', function($rootScope, $an
                 });
                 dynamics.animate(element[0], {
                     translateX: -w
-                }, bezierOptions); 
+                }, bezierOptions);
             }
             setTimeout(done, 1000);
         }

@@ -1,6 +1,6 @@
 /*global angular,FB */
 
-var LESSON = true;
+var LESSON = false;
 
 var app = angular.module('ullo', ['ngRoute', 'ngMessages', 'ngAnimate', 'relativeDate', 'ngFileUpload']);
 
@@ -19,15 +19,8 @@ app.config(['$httpProvider', '$routeProvider', '$locationProvider', function ($h
 
     $httpProvider.defaults.withCredentials = true;
 
-    $routeProvider.when('/test', {
-
-        title: 'Test',
-        templateUrl: 'templates/dishes.html',
-        controller: 'TestCtrl',
-        controllerAs: 'testCtrl',
-
-    }).when('/', {
-
+	// SECURE ROUTING
+    $routeProvider.when('/stream', {
         title: 'Stream',
         templateUrl: 'templates/stream.html',
         controller: 'StreamCtrl',
@@ -37,42 +30,8 @@ app.config(['$httpProvider', '$routeProvider', '$locationProvider', function ($h
                 return Users.isLoggedOrGoTo('/splash');
             }]
         },
-
-    }).when('/stream', {
-
-        title: 'Stream',
-        templateUrl: 'templates/stream.html',
-        controller: 'StreamCtrl',
-        controllerAs: 'streamCtrl',
-        resolve: {
-            user: ['Users', function(Users){
-                return Users.isLoggedOrGoTo('/splash');
-            }]
-        },
-
-    }).when('/splash', {
-
-        title: 'Splash',
-        templateUrl: 'templates/splash.html',
-        controller: 'SplashCtrl',
-        controllerAs: 'splashCtrl',
-
-    }).when('/signin', {
-
-        title: 'Sign In',
-        templateUrl: 'templates/signin.html',
-        controller: 'SigninCtrl',
-        controllerAs: 'signinCtrl',
-
-    }).when('/signup', {
-
-        title: 'Sign Up',
-        templateUrl: 'templates/signup.html',
-        controller: 'SignupCtrl',
-        controllerAs: 'signupCtrl',
 
     }).when('/dishes/:dishId', {
-
         title: 'Dish',
         templateUrl: 'templates/dish.html',
         controller: 'DishCtrl',
@@ -85,7 +44,6 @@ app.config(['$httpProvider', '$routeProvider', '$locationProvider', function ($h
         isForward: true,
 
     }).when('/categories/:categoryId', {
-
         title: 'Category',
         templateUrl: 'templates/category.html',
         controller: 'CategoryCtrl',
@@ -98,7 +56,6 @@ app.config(['$httpProvider', '$routeProvider', '$locationProvider', function ($h
         isForward: true,
 
     }).when('/users/:userRoute', {
-
         title: 'User',
         templateUrl: 'templates/user.html',
         controller: 'UserCtrl',
@@ -111,7 +68,6 @@ app.config(['$httpProvider', '$routeProvider', '$locationProvider', function ($h
         isForward: true,
 
     }).when('/post', {
-
         title: 'Add Post',
         templateUrl: 'templates/post.html',
         controller: 'PostCtrl',
@@ -124,7 +80,6 @@ app.config(['$httpProvider', '$routeProvider', '$locationProvider', function ($h
         isForward: true,
 
     }).when('/settings', {
-
         title: 'Settings',
         templateUrl: 'templates/settings.html',
         controller: 'SettingsCtrl',
@@ -135,6 +90,31 @@ app.config(['$httpProvider', '$routeProvider', '$locationProvider', function ($h
             }]
         },
         isForward: true,
+
+	// UNSECURE ROUTING
+    }).when('/splash', {
+        title: 'Splash',
+        templateUrl: 'templates/splash.html',
+        controller: 'SplashCtrl',
+        controllerAs: 'splashCtrl',
+
+    }).when('/signin', {
+        title: 'Sign In',
+        templateUrl: 'templates/signin.html',
+        controller: 'SigninCtrl',
+        controllerAs: 'signinCtrl',
+
+    }).when('/signup', {
+        title: 'Sign Up',
+        templateUrl: 'templates/signup.html',
+        controller: 'SignupCtrl',
+        controllerAs: 'signupCtrl',
+
+    }).when('/test', {
+        title: 'Test',
+        templateUrl: 'templates/dishes.html',
+        controller: 'TestCtrl',
+        controllerAs: 'testCtrl',
 
     }).when('/404', {
 

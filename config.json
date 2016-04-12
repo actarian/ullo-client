@@ -34,11 +34,12 @@
             "src": [
                 "./src/js/app.js",
                 "./src/js/animations/animations.js",
-                "./src/js/directives/directives.js",
+                "./src/js/controllers/controllers.js",
+				"./src/js/directives/directives.js",
                 "./src/js/models/models.js",
+                "./src/js/providers/providers.js",
                 "./src/js/services/services.js",
-                "./src/js/workers/workers.js",
-                "./src/js/controllers/controllers.js"
+                "./src/js/workers/workers.js"
             ],
             "folder": "./wwwroot/js/app",
             "dist": "./wwwroot/js/app.js"

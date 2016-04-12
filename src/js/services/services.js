@@ -6,18 +6,6 @@ app.factory('FacebookService', ['$q', 'APP', function ($q, APP) {
 
     }
 
-    function onFacebookStatus(response, deferred) {
-        FacebookService.authResponse = null;
-        if (response.status === 'connected') {
-            FacebookService.authResponse = response.authResponse;
-            deferred.resolve(response);
-        } else if (response.status === 'not_authorized') {
-            deferred.reject(response);
-        } else {
-            deferred.reject(response);
-        }
-    }
-
     FacebookService.FB = function () {
         var deferred = $q.defer();
         if (window['FB'] !== undefined) {
@@ -34,7 +22,7 @@ app.factory('FacebookService', ['$q', 'APP', function ($q, APP) {
 
     FacebookService.getFacebookMe = function () {
         var deferred = $q.defer();
-        FacebookService.FB().then(function (facebook) {
+		FacebookService.FB().then(function (facebook) {
             facebook.api('/me', { fields: 'id,name,first_name,last_name,email,gender,picture,cover,link' }, function (response) {
                 if (!response || response.error) {
                     deferred.reject('Error occured');
@@ -42,13 +30,13 @@ app.factory('FacebookService', ['$q', 'APP', function ($q, APP) {
                     deferred.resolve(response);
                 }
             });
-        })
+        });
         return deferred.promise;
     };
 
     FacebookService.getPictureMe = function () {
         var deferred = $q.defer();
-        FacebookService.FB().then(function (facebook) {
+		FacebookService.FB().then(function (facebook) {
             facebook.api('/me/picture', { width: 300, height: 300, type: 'square' }, function (response) {
                 if (!response || response.error) {
                     deferred.reject('Error occured');
@@ -56,51 +44,51 @@ app.factory('FacebookService', ['$q', 'APP', function ($q, APP) {
                     deferred.resolve(response);
                 }
             });
-        })
+        });
+        return deferred.promise;
+    };
+
+    FacebookService.getLoginStatus = function () {
+        var deferred = $q.defer();
+		FacebookService.FB().then(function (facebook) {
+            facebook.getLoginStatus(function (response) {
+                onFacebookStatus(response, deferred);
+            });
+        });
         return deferred.promise;
     };
 
     FacebookService.login = function () {
         var deferred = $q.defer();
-        var isMobile = false;
-        try {
-            isMobile = window.navigator.standalone; // (window.location.href == top.location.href && window.location.href.indexOf("/mobile/") !== -1);
-        } catch (e) { }
-        if (!isMobile) {
-            FacebookService.FB().then(function (facebook) {
-                facebook.login(function (response) {
-                    onFacebookStatus(response, deferred);
-                }, {
-                        scope: 'public_profile,email' // publish_stream,
-                    });
-            });
-        } else {
-            var permissionUrl = "https://m.facebook.com/dialog/oauth?client_id=" + APP.FACEBOOK_APP_ID + "&response_type=code&redirect_uri=" + APP.CLIENT + "&scope=" + 'public_profile,email';
-            window.location.href = permissionUrl;
-            return;
-        }
-        /*
-        FacebookService.FB().then(function(facebook) {
-            facebook.login(function(response) {
+		FacebookService.FB().then(function (facebook) {
+            facebook.login(function (response) {
                 onFacebookStatus(response, deferred);
             }, {
                 scope: 'public_profile,email' // publish_stream,
-                , redirect_uri: APP.CLIENT
             });
         });
-        */
         return deferred.promise;
-    }
+    };
 
     FacebookService.logout = function () {
         var deferred = $q.defer();
-        FacebookService.FB().then(function (facebook) {
-            facebook.logout(function (response) {
-                deferred.resolve(response);
+		FacebookService.FB().then(function (facebook) {
+			facebook.logout(function (response) {
+				deferred.resolve(response);
+			});
+        });
+        return deferred.promise;
+    };
+
+    FacebookService.deletePermissions = function () {
+        var deferred = $q.defer();
+		FacebookService.FB().then(function (facebook) {
+			facebook.api('/me/permissions', 'delete', function (response) {
+				deferred.resolve(response);
             });
         });
         return deferred.promise;
-    }
+    };
 
     FacebookService.init = function () {
         var deferred = $q.defer();
@@ -112,11 +100,8 @@ app.factory('FacebookService', ['$q', 'APP', function ($q, APP) {
                 xfbml: true,
                 version: 'v2.5'
             });
-            FB.getLoginStatus(function (response) {
-                onFacebookStatus(response, deferred);
-            });
+            deferred.resolve(FB);
         };
-
         try {
             (function (d, s, id) {
                 var js, fjs = d.getElementsByTagName(s)[0];
@@ -124,18 +109,29 @@ app.factory('FacebookService', ['$q', 'APP', function ($q, APP) {
                 js = d.createElement(s); js.id = id;
                 js.src = "//connect.facebook.net/en_US/sdk.js";
                 fjs.parentNode.insertBefore(js, fjs);
-            } (document, 'script', 'facebook-jssdk'));
+            }(document, 'script', 'facebook-jssdk'));
         } catch (e) {
             deferred.reject(e);
         }
         return deferred.promise;
-    }
+    };
+
+    function onFacebookStatus(response, deferred) {
+        FacebookService.authResponse = null;
+        if (response.status === 'connected') {
+            FacebookService.authResponse = response.authResponse;
+            deferred.resolve(response);
+        } else if (response.status === 'not_authorized') {
+            deferred.reject(response);
+        } else {
+            deferred.reject(response);
+        }
+    };
 
     return FacebookService;
 
 }]);
 
-/** USERS SERVICE **/
 app.factory('Users', ['$q', '$http', '$httpAsync', '$location', '$timeout', 'APP', 'LocalStorage', 'User', function ($q, $http, $httpAsync, $location, $timeout, APP, LocalStorage, User) {
 
     // PRIVATE VARIABLE FOR CURRENT USER
