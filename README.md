@@ -36,7 +36,9 @@ ullo-client
     └───templates
     index.html    
 ```
-    
+###Description
+This repository contains the Ullo client app as seen on <http://ulloclient.wslabs.it>
+		
 ###Commands
 
 * **npm install**
