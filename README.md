@@ -1,4 +1,5 @@
-##Ullo Client App##
+Ullo Client App [![Deps](https://raw.githubusercontent.com/actarian/ullo-client/master/wwwroot/img/icons/favicon-32x32.png)](http://ulloclient.wslabs.it)
+============
 
 [![Deps](https://david-dm.org/actarian/ullo-client.svg)](https://david-dm.org/actarian/ullo-client)
 [![Build](https://travis-ci.org/actarian/ullo-client.svg)](https://travis-ci.org/actarian/ullo-client)
