@@ -6,7 +6,7 @@ var app = angular.module('ullo', ['ngRoute', 'ngMessages', 'ngAnimate', 'relativ
 
 app.constant('APP', {
     CLIENT: window.location.href.indexOf('http://ulloclient.wslabs.it') === 0 ? 'http://ulloclient.wslabs.it' : 'http://dev.ullowebapp:8081',
-    API: LESSON || window.location.href.indexOf('http://ulloclient.wslabs.it') === 0 ? 'http://ulloapi.wslabs.it' : 'https://localhost:44302',
+    API: (LESSON || window.location.href.indexOf('http://ulloclient.wslabs.it') === 0) ? 'http://ulloapi.wslabs.it' : 'https://localhost:44302',
     FACEBOOK_APP_ID: window.location.href.indexOf('http://ulloclient.wslabs.it') === 0 ? '1054303094614120' : '1062564893787940',
     assetTypeEnum: {
         Unknown: 0,
@@ -18,7 +18,7 @@ app.constant('APP', {
 app.config(['$httpProvider', '$routeProvider', '$locationProvider', function ($httpProvider, $routeProvider, $locationProvider) {
 
     $httpProvider.defaults.withCredentials = true;
-    
+
     $routeProvider.when('/test', {
 
         title: 'Test',
@@ -156,8 +156,6 @@ app.run(['$rootScope', '$window', 'APP', function ($rootScope, $window, APP) {
 
     document.ontouchmove = function (event) {
         event.preventDefault();
-        // event.stopPropagation();
-        // return false;
     }
 
     window.oncontextmenu = function (event) {
@@ -165,12 +163,6 @@ app.run(['$rootScope', '$window', 'APP', function ($rootScope, $window, APP) {
         event.stopPropagation();
         return false;
     };
-
-    /*
-    $rootScope.$on('$routeChangeSuccess', function($scope, nextRoute, lastRoute) {
-        console.log('app.$routeChangeSuccess', 'nextRoute', nextRoute, 'lastRoute', lastRoute);
-    });
-    */
 
     function Picture(route, size) {
         if (route.indexOf('http') === 0) {
@@ -216,86 +208,8 @@ app.run(['$rootScope', '$window', 'APP', function ($rootScope, $window, APP) {
         return src;
     };
 
-    // BROADCAST LISTENER
     $rootScope.broadcast = function (event, params) {
         $rootScope.$broadcast(event, params);
     };
 
-    // WOW ANIMATION
-    /*
-    new WOW({
-        boxClass: 'wow',
-        animateClass: 'animated',
-        offset: -20,
-        mobile: true,
-        live: true
-    }).init();
-    */
-
-    /*
-    // FONT PRELOADER
-    setTimeout(function () {
-
-        var fontAkzidenz400 = new FontFaceObserver("Akzidenz", {
-            weight: 400
-        });
-        var fontAkzidenz500 = new FontFaceObserver("Akzidenz", {
-            weight: 500
-        });
-        var fontAkzidenzCondensed = new FontFaceObserver("Akzidenz Condensed", {
-            weight: 700
-        });
-        Promise.all([
-            fontAkzidenz400.check(),
-            fontAkzidenz500.check(null, 1000),
-            fontAkzidenzCondensed.check(),
-        ]).then(function () {
-            document.documentElement.className += " fonts-loaded";
-        }, function () {
-            document.documentElement.className += " fonts-timeout";
-        });
-
-    }, 0);
-    */
-
 }]);
-
-/*
-app.provider('user', function userProvider() {        
-    // In the provider function, you cannot inject any
-    // service or factory. This can only be done at the
-    // "$get" method.
-    this.$get = ['$q', '$location', 'Users', function ($q, $location, Users) {
-        return {
-            isLoggedOrGoTo: function(redirect) {
-                var deferred = $q.defer();
-                Users.isLogged().then(function (user) {
-                    console.log('isLogged.success', user);
-                    deferred.resolve(user);
-                }, function (error) {
-                    console.log('isLogged.error', error);
-                    deferred.reject();
-                    $location.path(redirect);
-                });
-                return deferred.promise;
-            },
-            isAdminOrGoTo: function(redirect) {
-                var deferred = $q.defer();
-                Users.isAdmin().then(function (user) {
-                    deferred.resolve(user);
-                }, function () {
-                    deferred.reject();
-                    $location.path(redirect);
-                });
-                return deferred.promise;
-            },
-            isLogged: function() {
-                return this.isLoggedOrGoTo('/splash');
-            },
-            isAdmin: function() {
-                return this.isAdminOrGoTo('/splash');
-            }
-        }
-    }];
-});
-*/

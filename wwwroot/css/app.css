@@ -1370,6 +1370,9 @@ body {
   /* Chrome, Safari, Opera */
   transform-style: preserve-3d;
 }
+[ng-view] > .inner {
+  overflow: hidden;
+}
 .page {
   display: block;
   position: absolute;
@@ -1416,7 +1419,7 @@ body {
   width: 100%;
   height: 100%;
   /*
-        &.splash, &.add-dish, &.add-dish .scrollable.content {            
+        &.splash, &.add-dish, &.add-dish .scrollable.content {
             background: @brand-info;
             color: @brand-primary;
         }
@@ -1463,7 +1466,7 @@ body {
         .picture {
             width: 16px;
             height: 16px;
-            border-radius: 8px;   
+            border-radius: 8px;
         }
     }
     */

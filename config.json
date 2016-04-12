@@ -1,5 +1,5 @@
 {
-    "name": "ullo-client",    
+    "name": "ullo-client",
     "paths": {
         "node": "./node_modules",
         "bower": "./bower_components",
@@ -10,7 +10,7 @@
         "css": "/css",
         "js": "/js"
     },
-    "bundles": {        
+    "bundles": {
         "css": [{
             "src": [
                 "./wwwroot/css/bootstrap-4/bootstrap.css",
@@ -32,12 +32,12 @@
             "dist": "./wwwroot/js/vendors.js"
         }, {
             "src": [
-                "./src/js/utils/utils.js",
                 "./src/js/app.js",
                 "./src/js/animations/animations.js",
                 "./src/js/directives/directives.js",
                 "./src/js/models/models.js",
                 "./src/js/services/services.js",
+                "./src/js/workers/workers.js",
                 "./src/js/controllers/controllers.js"
             ],
             "folder": "./wwwroot/js/app",
@@ -48,7 +48,7 @@
                 "./src/js/workers/loader.js"
             ],
             "folder": "./wwwroot/js/workers"
-        }] 
+        }]
     },
     "browserlist": [
         "Chrome >= 30",
@@ -63,5 +63,5 @@
     "server": {
         "name": "dev.ullowebapp",
         "port": 8081
-    } 
+    }
 }

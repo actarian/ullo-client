@@ -22,7 +22,8 @@ var gulp = require('gulp'),
     typescript = require('gulp-typescript'),
     less = require('gulp-less'),
     sass = require('gulp-sass'),
-    autoprefixer = require('gulp-autoprefixer');
+    autoprefixer = require('gulp-autoprefixer'),
+	ngdocs = require('gulp-ngdocs');
 
 
 /****************
@@ -34,16 +35,19 @@ var defaults = {};
 /*****************
  *** VARIABLES ***
  *****************/
-var config = JSON.parse(fs.readFileSync('./config.json'));
-for (var p in defaults) {
-    config[p] = config[p] || defaults[p];
+var config, paths, folders, bundles, browserlist, server;
+function loadConfig() {
+	config = JSON.parse(fs.readFileSync('./config.json'));
+	for (var p in defaults) {
+		config[p] = config[p] || defaults[p];
+	}
+	paths = config.paths;
+	folders = config.folders;
+	bundles = config.bundles;
+	browserlist = config.browserlist;
+	server = config.server;
 }
-var paths = config.paths;
-var folders = config.folders;
-var bundles = config.bundles;
-var browserlist = config.browserlist;
-var server = config.server;
-
+loadConfig();
 
 /****************
  *** PATTERNS ***
@@ -55,7 +59,7 @@ var matches = {
     css: '/**/*.css',
     js: '/**/*.js',
     typescript: '/**/*.ts',
-    jade: '/**/*.jade',    
+    jade: '/**/*.jade',
 };
 var excludes = {
     everything: '/**/*.*',
@@ -146,7 +150,7 @@ gulp.task('less:compile', function() {
         .pipe(less().on('less:compile.error', function (error) {
             console.log(error);
         }))
-        // .pipe(sourcemaps.write()) // save .map        
+        // .pipe(sourcemaps.write()) // save .map
         .pipe(autoprefixer({ browsers: browserlist })) // autoprefixer
         .pipe(gulp.dest(paths.root)) // save .css
         .pipe(cssmin())
@@ -181,7 +185,7 @@ gulp.task('sass:compile', function() {
         .pipe(sass().on('sass:compile.error', function (error) {
             console.log(error);
         }))
-        // .pipe(sourcemaps.write()) // save .map        
+        // .pipe(sourcemaps.write()) // save .map
         .pipe(autoprefixer({ browsers: browserlist })) // autoprefixer
         .pipe(gulp.dest(paths.root)) // save .css
         .pipe(cssmin())
@@ -203,7 +207,8 @@ gulp.task('sass', ['sass:compile', 'sass:watch']);
  ******************/
 var jsbundles = [];
 bundles.js.forEach(function(bundle, i) {
-    var key = 'js:bundle:' + i;    
+	loadConfig();
+    var key = 'js:bundle:' + i;
     jsbundles.push(key);
     gulp.task(key, function() {
         var pipes = gulp.src(bundle.src, { base: '.' })
@@ -214,7 +219,7 @@ bundles.js.forEach(function(bundle, i) {
             console.log(key, 'do:folder', bundle.folder, bundle.src);
             pipes = pipes.pipe(rename({
                 dirname: '', // flatten directory
-            })).pipe(gulp.dest(bundle.folder)); // copy files        
+            })).pipe(gulp.dest(bundle.folder)); // copy files
         }
         if (bundle.dist) { // concat bundle
             console.log(key, 'do:concat', bundle.dist, bundle.src);
@@ -226,15 +231,15 @@ bundles.js.forEach(function(bundle, i) {
             .pipe(sourcemaps.init())
             .pipe(uglify()) // { preserveComments: 'license' }
             .pipe(rename({ extname: '.min.js' }))
-            .pipe(sourcemaps.write('.')) // save .map  
-            .pipe(gulp.dest('.')); // save .min.js            
+            .pipe(sourcemaps.write('.')) // save .map
+            .pipe(gulp.dest('.')); // save .min.js
         }
-        return pipes;    
+        return pipes;
     });
 });
 gulp.task('js:bundles', jsbundles, function(done) { done(); });
 gulp.task('js:watch', function () {
-    var sources = [];
+    var sources = ['./config.json'];
     bundles.js.forEach(function (bundle, i) {
         bundle.src.forEach(function (src, i) {
             sources.push(src);
@@ -253,7 +258,8 @@ gulp.task('js:watch', function () {
  *******************/
 var cssbundles = [];
 bundles.css.forEach(function(bundle, i) {
-    var key = 'css:bundle:' + i;    
+	loadConfig();
+    var key = 'css:bundle:' + i;
     jsbundles.push(key);
     gulp.task(key, function() {
         var pipes = gulp.src(bundle.src, { base: '.' })
@@ -264,7 +270,7 @@ bundles.css.forEach(function(bundle, i) {
             console.log(key, 'do:folder', bundle.folder, bundle.src);
             pipes = pipes.pipe(rename({
                 dirname: '', // flatten directory
-            })).pipe(gulp.dest(bundle.folder)); // copy files        
+            })).pipe(gulp.dest(bundle.folder)); // copy files
         }
         if (bundle.dist) {
             console.log(key, 'do:concat', bundle.dist, bundle.src);
@@ -276,7 +282,7 @@ bundles.css.forEach(function(bundle, i) {
             .pipe(sourcemaps.init())
             .pipe(cssmin())
             .pipe(rename({ extname: '.min.css' }))
-            .pipe(sourcemaps.write('.')) // save .map  
+            .pipe(sourcemaps.write('.')) // save .map
             .pipe(gulp.dest('.')); // save .min.css
         }
         return pipes;
@@ -284,7 +290,7 @@ bundles.css.forEach(function(bundle, i) {
 });
 gulp.task('css:bundles', cssbundles, function(done) { done(); });
 gulp.task('css:watch', function() {
-    var sources = [];
+    var sources = ['./config.json'];
     bundles.css.forEach(function (bundle, i) {
         bundle.src.forEach(function (src, i) {
             sources.push(src);
@@ -308,7 +314,7 @@ gulp.task('compile', ['less:compile', 'sass:compile', 'css:bundles', 'js:bundles
  *** SERVE ***
  *************/
 gulp.task('serve', ['compile'], function() {
-    // more info on https://www.npmjs.com/package/gulp-webserver   
+    // more info on https://www.npmjs.com/package/gulp-webserver
     var options = {
         host: server.name,
         port: server.port,
@@ -325,7 +331,7 @@ gulp.task('serve', ['compile'], function() {
             },
         ],
         livereload: {
-            enable: true, // need this set to true to enable livereload 
+            enable: true, // need this set to true to enable livereload
             filter: function(filename) {
                 return !filename.match(/.map$/); // exclude all source maps from livereload
             }

@@ -30,7 +30,7 @@ html, body {
 .screen {
     width: 100vw;
     height: 100vh;
-    
+
     .desktop & {
         max-width: 375px;
         max-height: 667px;
@@ -42,41 +42,47 @@ html, body {
     }
 }
 
+[ng-view] {
+	& > .inner {
+		overflow: hidden;
+	}
+}
+
 .page {
     display: block;
     position: absolute;
     width: 100%;
-    height: 100%;    
+    height: 100%;
     max-width: 375px;
     max-height: 667px;
-    
-    &.ng-enter, &.ng-leave {        
-        .transition-transform(~'all'; 650ms; 0ms; cubic-bezier(.66,.01,.37,.99)); //; 1000s; 0s; cubic-bezier(0.250, 0.460, 0.450, 0.940));        
-    }    
+
+    &.ng-enter, &.ng-leave {
+        .transition-transform(~'all'; 650ms; 0ms; cubic-bezier(.66,.01,.37,.99)); //; 1000s; 0s; cubic-bezier(0.250, 0.460, 0.450, 0.940));
+    }
     &.ng-enter {
-        .transform(translateX(100%));                
+        .transform(translateX(100%));
         &.ng-enter-active {
             .transform(translateX(0));
-        }        
-    }    
-    &.ng-leave {        
+        }
+    }
+    &.ng-leave {
         &.ng-leave-active {
             .transform(translateX(-100%));
-        }        
+        }
     }
-    
+
     & > .inner {
         display: block;
         position: relative;
         width: 100%;
         height: 100%;
         /*
-        &.splash, &.add-dish, &.add-dish .scrollable.content {            
+        &.splash, &.add-dish, &.add-dish .scrollable.content {
             background: @brand-info;
             color: @brand-primary;
         }
         */
-        &.splash {            
+        &.splash {
             background: @brand-info;
             color: @brand-primary;
         }
@@ -89,7 +95,7 @@ html, body {
         width: 30px;
         height: 30px;
         border-radius: 15px;
-        overflow: hidden;     
+        overflow: hidden;
         background: #e0e0e0 no-repeat;
         background-size: cover;
         vertical-align: middle;
@@ -100,7 +106,7 @@ html, body {
         vertical-align: middle;
         margin-left: 5px;
     }
-    
+
     .votes & {
         .picture {
             width: 16px;
@@ -108,12 +114,12 @@ html, body {
             border-radius: 8px;
         }
     }
-    
+
 }
 
 .votes {
     text-align: left;
-    
+
     .user + .user {
         margin-left: 4px;
     }
@@ -135,7 +141,7 @@ html, body {
         .picture {
             width: 16px;
             height: 16px;
-            border-radius: 8px;   
+            border-radius: 8px;
         }
     }
     */
@@ -177,7 +183,7 @@ html, body {
     &.btn-block {
         &:after {
             width: 100vw;
-            height: 100vw;            
+            height: 100vw;
         }
     }
     &.tapped {
@@ -193,7 +199,7 @@ html, body {
     table-layout: fixed;
     width: 100%;
     height: 100%;
-    
+
     .inner {
         display: table-cell;
         vertical-align: middle;
@@ -207,7 +213,7 @@ html, body {
         height: 25%;
     }
 
-    &.header {        
+    &.header {
         height: 80px;
         padding-top: 20px;
         /*
@@ -238,8 +244,8 @@ html, body {
         }
         .unselectable();
     }
-    
-    &.footer {        
+
+    &.footer {
         display: block;
         position: absolute;
         bottom: 0;
@@ -247,7 +253,7 @@ html, body {
         height: 5px;
         background: @brand-info;
         color: white;
-        
+
         .btn-add {
             position: absolute;
             left: 50%;
@@ -262,23 +268,23 @@ html, body {
 }
 
 .scrollable {
-    
+
     &.content {
         position: relative;
         height: ~"calc(100% - 80px)";
-        overflow: hidden;        
+        overflow: hidden;
         -webkit-overflow-scroll: touch;
         /*
         overflow-x: hidden;
         overflow-y: auto;
         */
-        background: white;        
+        background: white;
         cursor: pointer;
         & > .inner {
             position: absolute; // for performance
             width: 100%;
             min-height: 100%;
-            -webkit-overflow-scrolling: touch;            
+            -webkit-overflow-scrolling: touch;
         }
     }
     & > .indicator {
@@ -407,7 +413,7 @@ h6, .h6 {
         height: 100%;
         top: 0;
         background: url('/img/logo_ullo_0.png') no-repeat;
-        background-size: 100%;        
+        background-size: 100%;
     }
 }
 
@@ -417,7 +423,7 @@ h6, .h6 {
     width: 100%;
     text-align: center;
     margin-top: 10px;
-    
+
     &:before {
         content: '';
         display: block;
@@ -428,7 +434,7 @@ h6, .h6 {
         right: 10px;
         background: #f0f0f0;
     }
-    
+
     & span {
         background: white;
         color: #999;
@@ -502,7 +508,7 @@ ul.nav {
         bottom: 0;
         right: 0;
         .transform(scale(1.05,1.05));
-        .transition-transform();        
+        .transition-transform();
     }
     & > img.inner {
         max-width: 100%;
@@ -513,16 +519,16 @@ ul.nav {
     width: 8px;
 }
 ::-webkit-scrollbar-track {
-    -webkit-box-shadow: none; 
+    -webkit-box-shadow: none;
     -webkit-border-radius: 5px;
     border-radius: 5px;
 }
 ::-webkit-scrollbar-thumb {
     -webkit-border-radius: 5px;
     border-radius: 5px;
-    background: rgba(0,0,0,0.3); 
-    -webkit-box-shadow: none; 
+    background: rgba(0,0,0,0.3);
+    -webkit-box-shadow: none;
 }
 ::-webkit-scrollbar-thumb:window-inactive {
-	background: rgba(0,0,0,0.4); 
+	background: rgba(0,0,0,0.4);
 }

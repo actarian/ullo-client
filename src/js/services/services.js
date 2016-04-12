@@ -79,13 +79,13 @@ app.factory('FacebookService', ['$q', 'APP', function ($q, APP) {
             window.location.href = permissionUrl;
             return;
         }
-        /*        
-        FacebookService.FB().then(function(facebook) {         
-            facebook.login(function(response) {    
+        /*
+        FacebookService.FB().then(function(facebook) {
+            facebook.login(function(response) {
                 onFacebookStatus(response, deferred);
             }, {
-                scope: 'public_profile,email' // publish_stream, 
-                , redirect_uri: APP.CLIENT 
+                scope: 'public_profile,email' // publish_stream,
+                , redirect_uri: APP.CLIENT
             });
         });
         */
@@ -210,7 +210,7 @@ app.factory('Users', ['$q', '$http', '$httpAsync', '$location', '$timeout', 'APP
         })
         return deferred.promise;
     };
-    
+
     Users.isAdminOrGoTo = function(redirect) {
         var deferred = $q.defer();
         Users.getCurrentUser().then(function (user) {
@@ -561,8 +561,8 @@ app.factory('DataSource', ['$q', '$http', '$httpAsync', '$timeout', '$rootScope'
                     this.pagination = this.getPages();
                     this.busy = false;
                     $rootScope.$broadcast('onDataSourceUpdate', this);
-                    deferred.resolve(this.rows);    
-                    // console.log('DataSource.get');                    
+                    deferred.resolve(this.rows);
+                    // console.log('DataSource.get');
                 }.bind(this), 1000);
             };
         }
@@ -724,31 +724,24 @@ app.factory('DataSource', ['$q', '$http', '$httpAsync', '$timeout', '$rootScope'
     return DataSource;
 }]);
 
-/** LOCALSTORAGE SERVICE **/
-app.factory('LocalStorage', ['$http', '$q', '$window', function ($http, $q, $window) {
-    function LocalStorage() {
+app.factory('Cookie', ['$q', '$window', function ($q, $window) {
+    function Cookie() {
     }
-
-    function isLocalStorageSupported() {
-        try {
-            return 'localStorage' in window && window['localStorage'] !== null;
-        } catch (e) {
-            return false;
+    Cookie.TIMEOUT = 5 * 60 * 1000; // five minutes
+    Cookie._set = function (name, value, days) {
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            var expires = "; expires=" + date.toGMTString();
+        } else {
+            var expires = "";
         }
+        $window.document.cookie = name + "=" + value + expires + "; path=/";
     }
-    LocalStorage.isSupported = isLocalStorageSupported();
-    if (!LocalStorage.isSupported) {
-        console.log('LocalStorage.unsupported');
-    }
-
-    /** STATIC CLASS METHODS **/
-    LocalStorage.set = function (key, data) {
-        if (!this.isSupported) {
-            return;
-        }
+    Cookie.set = function (name, value, days) {
         try {
             var cache = [];
-            var json = JSON.stringify(data, function (key, value) {
+            var json = JSON.stringify(value, function (key, value) {
                 if (key === 'pool') {
                     return;
                 }
@@ -762,282 +755,330 @@ app.factory('LocalStorage', ['$http', '$q', '$window', function ($http, $q, $win
                 return value;
             });
             cache = null;
-            $window.localStorage.setItem(key, json);;
+            Cookie._set(name, json, days);
         } catch (e) {
-            console.log('LocalStorage.set.error serializing', key, data, e);
+            console.log('Cookie.set.error serializing', name, value, e);
         }
     };
-
-    LocalStorage.get = function (key) {
-        if (!this.isSupported) {
-            return;
-        }
-        var data = null;
-        if ($window.localStorage[key] !== undefined) {
-            try {
-                data = JSON.parse($window.localStorage[key]);
-            } catch (e) {
-                console.log('LocalStorage.get.error parsing', key, e);
+    Cookie.get = function (name) {
+        var cookieName = name + "=";
+        var ca = $window.document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1, c.length);
+            }
+            if (c.indexOf(cookieName) == 0) {
+                var value = c.substring(cookieName.length, c.length);
+                var data = null;
+                try {
+                    data = JSON.parse(value);
+                } catch (e) {
+                    console.log('Cookie.get.error parsing', key, e);
+                };
+                return data;
             }
         }
-        return data;
+        return null;
     };
-
-    // Register on storage event
-    LocalStorage.onStorage = function () {
-        console.log('LocalStorage.onStorage', arguments);
+    Cookie.delete = function (name) {
+        Cookie._set(name, "", -1);
     };
-    angular.element($window).on('storage', LocalStorage.onStorage);
+    Cookie.on = function (name) {
+        var deferred = $q.defer();
+        var i, interval = 1000, elapsed = 0, timeout = Cookie.TIMEOUT;
+        function checkCookie() {
+            if (elapsed > timeout) {
+                deferred.reject('timeout');
+            } else {
+                var c = Cookie.get(name);
+                if (c) {
+                    deferred.resolve(c);
+                } else {
+                    elapsed += interval;
+                    i = setTimeout(checkCookie, interval);
+                }
+            }
+        }
+        checkCookie();
+        return deferred.promise;
+    };
+    return Cookie;
+}]);
 
+app.factory('LocalStorage', ['$q', '$window', 'Cookie', function ($q, $window, Cookie) {
+    function LocalStorage() {
+    }
+    function isLocalStorageSupported() {
+        var supported = false;
+        try {
+            supported = 'localStorage' in $window && $window['localStorage'] !== null;
+            if (supported) {
+                $window.localStorage.setItem('test', '1');
+                $window.localStorage.removeItem('test');
+            } else {
+                supported = false;
+            }
+        } catch (e) {
+            supported = false;
+        }
+        return supported;
+    }
+    LocalStorage.isSupported = isLocalStorageSupported();
+    if (LocalStorage.isSupported) {
+        LocalStorage.set = function (name, value) {
+            try {
+                var cache = [];
+                var json = JSON.stringify(value, function (key, value) {
+                    if (key === 'pool') {
+                        return;
+                    }
+                    if (typeof value === 'object' && value !== null) {
+                        if (cache.indexOf(value) !== -1) {
+                            // Circular reference found, discard key
+                            return;
+                        }
+                        cache.push(value);
+                    }
+                    return value;
+                });
+                cache = null;
+                $window.localStorage.setItem(name, json);
+            } catch (e) {
+                console.log('LocalStorage.set.error serializing', name, value, e);
+            }
+        };
+        LocalStorage.get = function (name) {
+            var value = null;
+            if ($window.localStorage[name] !== undefined) {
+                try {
+                    value = JSON.parse($window.localStorage[name]);
+                } catch (e) {
+                    console.log('LocalStorage.get.error parsing', name, e);
+                }
+            }
+            return value;
+        };
+        LocalStorage.delete = function (name) {
+            $window.localStorage.removeItem(name);
+        };
+        LocalStorage.on = function (name) {
+            var deferred = $q.defer();
+            var i, timeout = Cookie.TIMEOUT;
+            function storageEvent(e) {
+                // console.log('LocalStorage.on', name, e);
+                clearTimeout(i);
+                if (e.originalEvent.key == name) {
+                    try {
+                        var value = JSON.parse(e.originalEvent.newValue); // , e.originalEvent.oldValue
+                        deferred.resolve(value);
+                    } catch (e) {
+                        console.log('LocalStorage.on.error parsing', name, e);
+                        deferred.reject('error parsing ' + name);
+                    }
+                }
+            }
+            angular.element($window).on('storage', storageEvent);
+            i = setTimeout(function () {
+                deferred.reject('timeout');
+            }, timeout);
+            return deferred.promise;
+        };
+    } else {
+        console.log('LocalStorage.unsupported switching to cookies');
+        LocalStorage.set = Cookie.set;
+        LocalStorage.get = Cookie.get;
+        LocalStorage.delete = Cookie.delete;
+        LocalStorage.on = Cookie.on;
+    }
     return LocalStorage;
 }]);
 
-app.factory('WebWorker', ['$q', '$http', function ($q, $http) {
-    var isWebWorkerSupported = (typeof (Worker) !== "undefined");
-    if (!isWebWorkerSupported) {
-        window.Worker = function () {
-            function Worker(src) {
-                var self = this;
-                $http.get(src, { transformResponse: function (d, h) { return d } }).then(function success(response) {
-                    try {
-                        eval('self.o = function(){ function postMessage(e) { self.onmessage({data:e}); }\n ' + response.data + ' };');
-                        self.object = new self.o();
-                        self.object.postMessage = function (e) {
-                            self.onmessage({data:e});
-                        }                            
-                    } catch(e) {
-                        console.log("Worker error ", e);    
-                    }
-                }, function error(response) {
-                    console.log("Worker not found");
-                });
-            }
-            Worker.prototype = {
-                onmessage: function (e) {
-                    console.log('Worker not implemented');
-                },
-                postMessage: function (e) {
-                    this.object.onmessage({ data: e });
-                }
-            }
-            return Worker;
-        } ();
-    }
-    function WebWorker(src) {
-        var self = this;
-        this.callbacks = {};
-        this.id = 0;
-        this.worker = new Worker(src);
-        this.worker.onmessage = function (e) {
-            self.onmessage(e);
-        };
-    }
-    WebWorker.prototype = {
-        parse: function (e) {
-            return JSON.parse(e.data);
-        },
-        stringify: function (data) {
-            return JSON.stringify(data);
-        },
-        onmessage: function (e) {
-            var data = this.parse(e);
-            var deferred = this.callbacks[data.id];
-            if (data.status !== -1) {
-                deferred.resolve(data);
-            } else {
-                deferred.reject(data);
-            }
-            delete this.callbacks[data.id];
-        },
-        post: function (data) {
-            var deferred = $q.defer();
-            data.id = this.id;
-            this.callbacks[this.id.toString()] = deferred;
-            this.id++;
-            this.worker.postMessage(this.stringify(data));
-            return deferred.promise;
-        },
-    };
-    WebWorker.isSupported = isWebWorkerSupported;
-    return WebWorker;
-}]);
+app.factory('Utils', ['Vector', function (Vector) {
+    (function () {
+        var lastTime = 0;
+        var vendors = ['ms', 'moz', 'webkit', 'o'];
+        for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+            window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
+            window.cancelAnimationFrame = window[vendors[x] + 'CancelAnimationFrame']
+                                       || window[vendors[x] + 'CancelRequestAnimationFrame'];
+        }
+        if (!window.requestAnimationFrame) {
+            window.requestAnimationFrame = function (callback, element) {
+                var currTime = new Date().getTime();
+                var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                var id = window.setTimeout(function () { callback(currTime + timeToCall); }, timeToCall);
+                lastTime = currTime + timeToCall;
+                return id;
+            };
+        }
+        if (!window.cancelAnimationFrame) {
+            window.cancelAnimationFrame = function (id) {
+                clearTimeout(id);
+            };
+        }
+    }());
 
-app.factory('$httpAsync', ['$q', '$http', function ($q, $http) {
-    var isWebWorkerSupported = (typeof (Worker) !== "undefined");
-    if (!isWebWorkerSupported) {
-        return $http;
-    }
-    var worker = new Worker('/js/workers/http.js');
-    var callbacks = {};
-    var id = 0;
-    var lowercase = function (string) { return isString(string) ? string.toLowerCase() : string; };
-    var trim = function (value) {
-        return isString(value) ? value.trim() : value;
-    };    
-    function $httpAsync(options) {
-        var deferred = $q.defer();
-        var wrap = getDefaults(options);
-        wrap.id = id.toString(); 
-        console.log('wrap', wrap);
-        /*
-        var xsrfValue = urlIsSameOrigin(config.url)
-            ? $$cookieReader()[config.xsrfCookieName || defaults.xsrfCookieName]
-            : undefined;
-        if (xsrfValue) {
-          reqHeaders[(config.xsrfHeaderName || defaults.xsrfHeaderName)] = xsrfValue;
-        }
-        $httpBackend(config.method, url, reqData, done, reqHeaders, config.timeout,
-            config.withCredentials, config.responseType);
-        */
-        callbacks[wrap.id] = deferred;
-        id++;
-        worker.postMessage($httpAsync.stringify(wrap));        
-        return deferred.promise;
-    }
-    $httpAsync.get = function (url, config) {
-        return $httpAsync(angular.extend({}, config || {}, {
-            method: 'GET',
-            url: url
-        }));
-    };
-    $httpAsync.delete = function (url, config) {
-        return $httpAsync(angular.extend({}, config || {}, {
-            method: 'DELETE',
-            url: url
-        }));
-    };
-    $httpAsync.head = function (url, config) {
-        return $httpAsync(angular.extend({}, config || {}, {
-            method: 'HEAD',
-            url: url
-        }));
-    };
-    $httpAsync.post = function (url, data, config) {
-        return $httpAsync(angular.extend({}, config || {}, {
-            method: 'POST',
-            data: data,
-            url: url
-        }));
-    };
-    $httpAsync.put = function (url, data, config) {
-        return $httpAsync(angular.extend({}, config || {}, {
-            method: 'PUT',
-            data: data,
-            url: url
-        }));
-    };
-    $httpAsync.patch = function (url, data, config) {
-        return $httpAsync(angular.extend({}, config || {}, {
-            method: 'PATCH',
-            data: data,
-            url: url
-        }));
-    };
-    $httpAsync.parse = function (e) {
-        return JSON.parse(e.data);
-    };
-    $httpAsync.stringify = function (data) {
-        return JSON.stringify(data);
-    };    
-    $httpAsync.isSupported = isWebWorkerSupported;
-    worker.onmessage = function (e) {
-        var wrap = $httpAsync.parse(e);
-        console.log('onmessage', wrap);
-        var deferred = callbacks[wrap.id];
-        var status = wrap.status >= -1 ? wrap.status : 0;
-        var getter = headersGetter(wrap.response.headers);
-        (isSuccess(status) ? deferred.resolve : deferred.reject)({
-            data: wrap.response.data, // !!!! JSON.parse(wrap.response.data),
-            headers: getter,
-            status: wrap.response.status,
-            statusText: wrap.response.statusText,
-            config: wrap.config,
-        });
-        delete callbacks[wrap.id];
-    }
-    return $httpAsync;    
-    function isSuccess(status) {
-        return 200 <= status && status < 300;
-    }
-    function createMap() {
-        return Object.create(null);
-    }
-    function isString(value) { return typeof value === 'string'; }
-    function parseHeaders(headers) {
-        var parsed = createMap(), i;
-        function fillInParsed(key, val) {
-            if (key) {
-                parsed[key] = parsed[key] ? parsed[key] + ', ' + val : val;
-            }
-        }
-        if (isString(headers)) {
-            var a = headers.split('\n');
-            for (var j = 0; j < a.length; j++) {
-                var line = a[j];
-                i = line.indexOf(':');
-                fillInParsed(lowercase(trim(line.substr(0, i))), trim(line.substr(i + 1)));
-            }
-        } else if (isObject(headers)) {
-            for (var p in headers) {
-                fillInParsed(lowercase(p), trim(headers[p]));
-            }
-        }
-        return parsed;
-    }
-    function headersGetter(headers) {
-        var headersObj;
-        return function (name) {
-            if (!headersObj) headersObj = parseHeaders(headers);
-            if (name) {
-                var value = headersObj[lowercase(name)];
-                if (value === void 0) {
-                    value = null;
+    var transformProperty = function detectTransformProperty() {
+        var transformProperty = 'transform',
+            safariPropertyHack = 'webkitTransform';
+		var div = document.createElement("DIV");
+        if (typeof div.style[transformProperty] !== 'undefined') {
+            ['webkit', 'moz', 'o', 'ms'].every(function(prefix) {
+                var e = '-' + prefix + '-transform';
+                if (typeof div.style[e] !== 'undefined') {
+                    transformProperty = e;
+                    return false;
                 }
-                return value;
+                return true;
+            });
+        } else if (typeof div.style[safariPropertyHack] !== 'undefined') {
+            transformProperty = '-webkit-transform';
+        } else {
+            transformProperty = undefined;
+        }
+        return transformProperty;
+    } ();
+
+    var _isTouch;
+    function isTouch() {
+        if (!_isTouch) {
+            _isTouch = {
+                value: ('ontouchstart' in window || 'onmsgesturechange' in window)
             }
-            return headersObj;
+        }
+        // console.log(_isTouch);
+        return _isTouch.value;
+    }
+
+    function getTouch(e, previous) {
+        var t = new Vector();
+        if (e.type == 'touchstart' || e.type == 'touchmove' || e.type == 'touchend' || e.type == 'touchcancel') {
+            var touch = null;
+            var event = e.originalEvent ? e.originalEvent : e;
+            var touches = event.touches.length ? event.touches : event.changedTouches;
+            if (touches && touches.length) {
+                touch = touches[0];
+            }
+            if (touch) {
+                t.x = touch.pageX;
+                t.y = touch.pageY;
+            }
+        } else if (e.type == 'click' || e.type == 'mousedown' || e.type == 'mouseup' || e.type == 'mousemove' || e.type == 'mouseover' || e.type == 'mouseout' || e.type == 'mouseenter' || e.type == 'mouseleave') {
+            t.x = e.pageX;
+            t.y = e.pageY;
+        }
+        if (previous) {
+            t.s = Vector.difference(previous, t);
+        }
+        t.type = e.type;
+        return t;
+    }
+
+    function getRelativeTouch(element, point) {
+        var rect = element[0].getBoundingClientRect();
+        var e = new Vector(rect.left,  rect.top);
+        return Vector.difference(e, point);
+    }
+
+    function getClosest(el, selector) {
+        var matchesFn, parent;
+        ['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector'].some(function (fn) {
+            if (typeof document.body[fn] == 'function') {
+                matchesFn = fn;
+                return true;
+            }
+            return false;
+        });
+        while (el !== null) {
+            parent = el.parentElement;
+            if (parent !== null && parent[matchesFn](selector)) {
+                return parent;
+            }
+            el = parent;
+        }
+        return null;
+    }
+
+
+    var getNow = Date.now || function() {
+        return new Date().getTime();
+    };
+
+    function throttle(func, wait, options) {
+        // Returns a function, that, when invoked, will only be triggered at most once
+        // during a given window of time. Normally, the throttled function will run
+        // as much as it can, without ever going more than once per `wait` duration;
+        // but if you'd like to disable the execution on the leading edge, pass
+        // `{leading: false}`. To disable execution on the trailing edge, ditto.
+        var context, args, result;
+        var timeout = null;
+        var previous = 0;
+        if (!options) options = {};
+        var later = function () {
+            previous = options.leading === false ? 0 : getNow();
+            timeout = null;
+            result = func.apply(context, args);
+            if (!timeout) context = args = null;
+        };
+        return function () {
+            var now = getNow();
+            if (!previous && options.leading === false) previous = now;
+            var remaining = wait - (now - previous);
+            context = this;
+            args = arguments;
+            if (remaining <= 0 || remaining > wait) {
+                if (timeout) {
+                    clearTimeout(timeout);
+                    timeout = null;
+                }
+                previous = now;
+                result = func.apply(context, args);
+                if (!timeout) context = args = null;
+            } else if (!timeout && options.trailing !== false) {
+                timeout = setTimeout(later, remaining);
+            }
+            return result;
         };
     }
-    function getDefaults(options) {
-        var defaults = {
-            method: 'GET',
-            withCredentials: false,
-            responseType: 'json',
-            headers: {},
-            config: {}
+
+    var Style = function() {
+        function Style() {
+            this.props = {
+                scale: 1,
+                hoverScale: 1,
+                currentScale: 1,
+            }
         }
-        defaults.withCredentials = $http.defaults.withCredentials;        
-        angular.extend(defaults.headers, $http.defaults.headers.common);  
-        var method = (options.method || defaults.method).toLowerCase();
-        if ($http.defaults.headers[method]) {
-            angular.extend(defaults.headers, $http.defaults.headers[method]);
-        }                       
-        console.log('defaults', $http.defaults);
-        // defaults = angular.extend(defaults, $http.defaults);        
-        /*
-    method{string}:                     HTTP method (e.g. 'GET', 'POST', etc)
-    url:{string}:                       Absolute or relative URL of the resource that is being requested.
-    params:{Object.<string|Object>}:    Map of strings or objects which will be serialized with the paramSerializer and appended as GET parameters.
-    
-    data:{string|Object}:               Data to be sent as the request message data.
-    headers:{Object}:                   Map of strings or functions which return strings representing HTTP headers to send to the server. If the return value of a function is null, the header will not be sent. Functions accept a config object as an argument.
-    
-    xsrfHeaderName:{string}:            Name of HTTP header to populate with the XSRF token.
-    xsrfCookieName:{string}:            Name of cookie containing the XSRF token.
-    transformRequest:{function(data, headersGetter)|Array.<function(data, headersGetter)>}:         transform function or an array of such functions. The transform function takes the http request body and headers and returns its transformed (typically serialized) version. See Overriding the Default Transformations
-    
-    transformResponse:{function(data, headersGetter, status)|Array.<function(data, headersGetter, status)>}:    transform function or an array of such functions. The transform function takes the http response body, headers and status and returns its transformed (typically deserialized) version. See Overriding the Default TransformationjqLiks
-    
-    paramSerializer:{string|function(Object<string,string>):string}:        A function used to prepare the string representation of request parameters (specified as an object). If specified as string, it is interpreted as function registered with the $injector, which means you can create your own serializer by registering it as a service. The default serializer is the $httpParamSerializer; alternatively, you can use the $httpParamSerializerJQLike
-    
-    cache:{boolean|Cache}:              If true, a default $http cache will be used to cache the GET request, otherwise if a cache instance built with $cacheFactory, this cache will be used for caching.
-    
-    timeout:{number|Promise}:           timeout in milliseconds, or promise that should abort the request when resolved.
-    withCredentials:{boolean}:          whether to set the withCredentials flag on the XHR object. See requests with credentials for more information.
-    
-    responseType:{string}:              see XMLHttpRequest.responseType.
-        */
-        options ? options = angular.extend(defaults, options) : defaults;
-        return options;
-    }  
+        Style.prototype = {
+            set: function (element) {
+                var styles = [];
+                angular.forEach(this, function (value, key) {
+                    if (key !== 'props')
+                        styles.push(key + ':' + value);
+                });
+                element.style.cssText = styles.join(';') + ';';
+            },
+            transform: function (transform) {
+                this[Utils.transformProperty] = transform;
+            },
+            transformOrigin: function (x, y) {
+                this[Utils.transformProperty + '-origin-x'] = (Math.round(x * 1000) / 1000) + '%';
+                this[Utils.transformProperty + '-origin-y'] = (Math.round(y * 1000) / 1000) + '%';
+            },
+        };
+        return Style;
+    }();
+
+    function Utils() {
+    }
+
+	Utils.transformProperty = transformProperty;
+    Utils.getTouch = getTouch;
+    Utils.getRelativeTouch = getRelativeTouch;
+    Utils.getClosest = getClosest;
+    Utils.throttle = throttle;
+    Utils.Style = Style;
+
+    return Utils;
 }]);
