@@ -22,8 +22,7 @@ var gulp = require('gulp'),
     typescript = require('gulp-typescript'),
     less = require('gulp-less'),
     sass = require('gulp-sass'),
-    autoprefixer = require('gulp-autoprefixer'),
-	ngdocs = require('gulp-ngdocs');
+    autoprefixer = require('gulp-autoprefixer');
 
 
 /****************
