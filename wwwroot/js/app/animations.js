@@ -4,8 +4,8 @@ app.animation('.navigation', ['$rootScope', '$animate', function($rootScope, $an
     var currentRoute = null;
     var bezierOptions = {
         type: dynamics.bezier,
-        points: [{x:0,y:0,cp:[{x:0.509,y:0.007}]},{x:1,y:1,cp:[{x:0.566,y:0.997}]}],
-        duration : 500,
+        points: [{ x: 0, y: 0, cp: [{ x: 0.509, y: 0.007 }] }, { x: 1, y: 1, cp: [{ x: 0.566, y: 0.997 }] }],
+        duration: 500,
     }
     $rootScope.$on('$routeChangeSuccess', function(event, current, previous) {
         previousRoute = previous.$$route;

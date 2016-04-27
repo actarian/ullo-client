@@ -17,6 +17,11 @@
                 "./node_modules/animate.css/animate.css"
             ],
             "dist": "./wwwroot/css/vendors.css"
+        }, {
+            "src": [
+                "./wwwroot/css/app.css"
+            ],
+			"lints": true
         }],
         "js": [{
             "src": [
@@ -42,7 +47,8 @@
                 "./src/js/workers/workers.js"
             ],
             "folder": "./wwwroot/js/app",
-            "dist": "./wwwroot/js/app.js"
+            "dist": "./wwwroot/js/app.js",
+			"lints": true
         }, {
             "src": [
                 "./src/js/workers/http.js",
@@ -61,6 +67,11 @@
         "Edge >= 12",
         "ExplorerMobile >= 10"
     ],
+	"lints": {
+		"js": false,
+		"css": false,
+		"scss": true
+	},
     "server": {
         "name": "dev.ullowebapp",
         "port": 8081

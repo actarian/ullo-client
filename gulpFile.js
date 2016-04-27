@@ -22,19 +22,28 @@ var gulp = require('gulp'),
     typescript = require('gulp-typescript'),
     less = require('gulp-less'),
     sass = require('gulp-sass'),
-    autoprefixer = require('gulp-autoprefixer');
+    autoprefixer = require('gulp-autoprefixer'),
+	jshint = require('gulp-jshint'),
+	csslint = require('gulp-csslint'),
+    scsslint = require('gulp-scss-lint');
 
 
 /****************
  *** DEFAULTS ***
  ****************/
-var defaults = {};
+var defaults = {
+	lints: {
+		js: false,
+		css: false,
+		scss: false,
+	}
+};
 
 
 /*****************
  *** VARIABLES ***
  *****************/
-var config, paths, folders, bundles, browserlist, server;
+var config, paths, folders, bundles, browserlist, lints, server;
 function loadConfig() {
 	config = JSON.parse(fs.readFileSync('./config.json'));
 	for (var p in defaults) {
@@ -44,6 +53,7 @@ function loadConfig() {
 	folders = config.folders;
 	bundles = config.bundles;
 	browserlist = config.browserlist;
+	lints = config.lints;
 	server = config.server;
 }
 loadConfig();
@@ -171,7 +181,7 @@ gulp.task('less', ['less:compile', 'less:watch']);
  ************/
 gulp.task('sass:compile', function() {
     console.log('sass:compile COMPILING!');
-    return gulp.src([
+    var pipes = gulp.src([
         paths.src + matches.sass,
         '!' + paths.src + excludes.sass,
         '!' + paths.node + excludes.everything,
@@ -179,17 +189,21 @@ gulp.task('sass:compile', function() {
     ], { base: paths.src })
         .pipe(plumber(function (error) {
             console.log('sass:compile.plumber', error);
-        }))
-        .pipe(sourcemaps.init())
-        .pipe(sass().on('sass:compile.error', function (error) {
-            console.log(error);
-        }))
-        // .pipe(sourcemaps.write()) // save .map
-        .pipe(autoprefixer({ browsers: browserlist })) // autoprefixer
-        .pipe(gulp.dest(paths.root)) // save .css
-        .pipe(cssmin())
-        .pipe(rename({ extname: '.min.css' }))
-        .pipe(gulp.dest(paths.root)); // save .min.css
+        }));
+	if (lints.scss) {
+		pipes = pipes.pipe(scsslint());
+	}
+	pipes = pipes.pipe(sourcemaps.init())
+	.pipe(sass().on('sass:compile.error', function (error) {
+		console.log(error);
+	}))
+	// .pipe(sourcemaps.write()) // save .map
+	.pipe(autoprefixer({ browsers: browserlist })) // autoprefixer
+	.pipe(gulp.dest(paths.root)) // save .css
+	.pipe(cssmin())
+	.pipe(rename({ extname: '.min.css' }))
+	.pipe(gulp.dest(paths.root)); // save .min.css
+	return pipes;
 });
 gulp.task('sass:watch', function() {
     var watcher = gulp.watch(paths.src + matches.sass, ['sass:compile']);
@@ -214,13 +228,16 @@ bundles.js.forEach(function(bundle, i) {
         .pipe(plumber(function(error) {
             console.log(key + '.plumber', error);
         }))
+        if (lints.js || bundle.lints) {
+			pipes = pipes.pipe(jshint());
+		}
         if (bundle.folder) {
             console.log(key, 'do:folder', bundle.folder, bundle.src);
             pipes = pipes.pipe(rename({
                 dirname: '', // flatten directory
             })).pipe(gulp.dest(bundle.folder)); // copy files
         }
-        if (bundle.dist) { // concat bundle
+		if (bundle.dist) { // concat bundle
             console.log(key, 'do:concat', bundle.dist, bundle.src);
             pipes = pipes.pipe(rename({
                 dirname: '', // flatten directory
@@ -265,6 +282,9 @@ bundles.css.forEach(function(bundle, i) {
         .pipe(plumber(function(error) {
             console.log(key + '.plumber', error);
         }))
+        if (lints.css || bundle.lints) {
+			pipes = pipes.pipe(csslint());
+		}
         if (bundle.folder) {
             console.log(key, 'do:folder', bundle.folder, bundle.src);
             pipes = pipes.pipe(rename({
