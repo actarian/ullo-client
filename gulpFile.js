@@ -8,7 +8,6 @@
 var gulp = require('gulp'),
     fs = require('fs'),
     promise = require('es6-promise'),
-    del = require('del'),
     rewrite = require('connect-modrewrite'),
     webserver = require('gulp-webserver'),
     rename = require('gulp-rename'),
