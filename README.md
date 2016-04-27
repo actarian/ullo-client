@@ -41,8 +41,8 @@ This repository contains the Ullo client app as seen on <http://ulloclient.wslab
 		
 ###Commands
 
+* **npm run setup**
 * **npm install**
-* **npm prepare**
 * **npm start**
 * on Visual Studio Code **ctrl+shift+b** will launch **npm start**
     
