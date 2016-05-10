@@ -663,7 +663,7 @@ app.directive('control', [function() {
       </file>
    </example>
 */
-app.directive('controlAutocomplete', ['$parse', '$window', '$timeout', function($parse, $window, $timeout) {
+app.directive('controlAutocomplete', ['$parse', '$window', '$timeout', 'Utils', function($parse, $window, $timeout, Utils) {
    var MAX_ITEMS = 5;
    return {
       restrict: 'A',
